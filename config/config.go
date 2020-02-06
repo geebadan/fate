@@ -26,27 +26,28 @@ const (
 )
 
 type FileOutput struct {
-	OutputMode OutputMode
-	Path       string
-	Heads      []string
+	OutputMode OutputMode `json:"output_mode"`
+	Path       string     `json:"path"`
+	Heads      []string   `json:"heads"`
 }
 
 type Config struct {
-	RunInit      bool
+	RunInit      bool       `json:"run_init"`
 	FilterMode   FilterMode `json:"filter_mode"`
-	StrokeMax    int
-	StrokeMin    int
-	HardFilter   bool
-	FixBazi      bool     //八字修正
-	SupplyFilter bool     //过滤补八字
-	ZodiacFilter bool     //过滤生肖
-	BaguaFilter  bool     //过滤卦象
-	Database     Database `json:"database"`
-	FileOutput   FileOutput
+	StrokeMax    int        `json:"stroke_max"`
+	StrokeMin    int        `json:"stroke_min"`
+	HardFilter   bool       `json:"hard_filter"`
+	FixBazi      bool       `json:"fix_bazi"`      //八字修正
+	SupplyFilter bool       `json:"supply_filter"` //过滤补八字
+	ZodiacFilter bool       `json:"zodiac_filter"` //过滤生肖
+	BaguaFilter  bool       `json:"bagua_filter"`  //过滤卦象
+	Regular      bool       `json:"regular"`       //常用
+	Database     Database   `json:"database"`
+	FileOutput   FileOutput `json:"file_output"`
 }
 
 var DefaultJSONPath = ""
-var DefaultHeads = []string{"姓名", "笔画", "拼音", "喜用神"}
+var DefaultHeads = []string{"姓名", "笔画", "拼音", "喜用神", "八字"}
 
 func init() {
 	if DefaultJSONPath == "" {
@@ -78,7 +79,7 @@ func LoadConfig() (c *Config) {
 }
 
 func OutputConfig(config *Config) error {
-	bys, e := json.Marshal(config)
+	bys, e := json.MarshalIndent(config, "", " ")
 	if e != nil {
 		return e
 	}
@@ -90,13 +91,14 @@ func DefaultConfig() *Config {
 	return &Config{
 		RunInit:      false,
 		FilterMode:   0,
-		StrokeMax:    3,
-		StrokeMin:    18,
+		StrokeMax:    18,
+		StrokeMin:    3,
 		HardFilter:   false,
 		FixBazi:      false,
 		SupplyFilter: true,
 		ZodiacFilter: true,
 		BaguaFilter:  true,
+		Regular:      true,
 		Database: Database{
 			Host:         "127.0.0.1",
 			Port:         "3306",
@@ -108,8 +110,8 @@ func DefaultConfig() *Config {
 			Driver:       "mysql",
 			File:         "",
 			Dsn:          "",
-			ShowSQL:      true,
-			ShowExecTime: true,
+			ShowSQL:      false,
+			ShowExecTime: false,
 		},
 		FileOutput: FileOutput{
 			Heads:      DefaultHeads,

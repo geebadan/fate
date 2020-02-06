@@ -13,7 +13,7 @@ func init() {
 }
 
 func TestFate_RunMakeName(t *testing.T) {
-	born := chronos.New("2020/01/14 02:45").Solar().Time()
+	born := chronos.New("2020/02/06 15:45").Solar().Time()
 	last := "张"
 	cfg := config.DefaultConfig()
 	cfg.BaguaFilter = true
@@ -22,10 +22,11 @@ func TestFate_RunMakeName(t *testing.T) {
 	cfg.HardFilter = true
 	cfg.StrokeMin = 3
 	cfg.StrokeMax = 24
+	cfg.Regular = true
 	cfg.RunInit = false
 	cfg.FileOutput = config.FileOutput{
-		OutputMode: config.OutputModeCSV,
-		Path:       "name2.csv",
+		OutputMode: config.OutputModeLog,
+		Path:       "name.log",
 	}
 	cfg.Database = config.Database{
 		Host:         "localhost",

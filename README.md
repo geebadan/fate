@@ -1,14 +1,17 @@
 # 命运：现代科学取名工具 #
-# FATE: A modern science chinese name create tool #
+FATE: A modern science chinese name create tool
 ## Github第一个开源的中文取名项目 ##
-## The first chinese name create tool in github ##
+The first chinese name create tool in github
 
-## [起名算法中目前排第一个](https://www.google.com/search?q=%E8%B5%B7%E5%90%8D%E7%AE%97%E6%B3%95&oq=%E8%B5%B7%E5%90%8D%E7%AE%97%E6%B3%95&aqs=chrome..69i57.3721j0j8&sourceid=chrome&ie=UTF-8) ##
+## [起名算法搜索排第一位](https://www.google.com/search?q=%E8%B5%B7%E5%90%8D%E7%AE%97%E6%B3%95&oq=%E8%B5%B7%E5%90%8D%E7%AE%97%E6%B3%95&aqs=chrome..69i57.3721j0j8&sourceid=chrome&ie=UTF-8) ##
 
-### 一个好名字伴随人的一生，FATE让你取一个好名字 ###
-程序适用于单个姓或双个姓，起2个名的情况。（如：独孤**，李张**，张**，王**）  
+# 最新Release版下载： [v3.1.1](https://github.com/godcong/fate/releases/tag/v3.1.1) #
 
-### 参考算法 ###
+## 简介 ##
+一个好名字伴随人的一生，FATE让你取一个好名字：
+本程序适用于单个姓或双个姓，起2个名的情况。（如：独孤**，李张**，张**，王**）  
+
+## 参考算法 ##
   周易卦象  
   大衍之数  
   三才五格  
@@ -16,25 +19,18 @@
   生肖用字  
   八字吉凶  
 
-## 接口用例 ##
+## 接口调用生成姓名 ##
 ```   
-        使用前请导入pre的数据（测试字库尚未完善，生成姓名后可以去一些测名网站验证下）
-        //连接mysql数据库
-    	eng := fate.InitMysql("192.168.1.161:3306", "root", "111111")
-        //生日
-    	c := chronos.New("2020/01/23 11:31")
-        //姓名的最少笔画数（可不设）
-    	fate.DefaultStrokeMin = 3
-        //姓名的最大笔画数（可不设）
-    	fate.DefaultStrokeMax = 15
- 
-        //设定数据库：fate.Database(eng)
-        //开启八卦过滤：fate.BaGuaFilter()
-        //开启生肖过滤：fate.ZodiacFilter()
-        //开启喜用神过滤：fate.SupplyFilter()
-        //第一参数：姓
+        使用前请导入database的数据（测试字库已基本完善，保险起见生成姓名后可以去一些测名网站验证下）
+        //加载配置（具体参数参考example/create_a_name）
+    	cfg := config.Default()
+        //生日：
+    	born := chronos.New("2020/01/23 11:31")
+        //姓氏：
+        lastName := "张"
+        //第一参数：姓氏
         //第二参数：生日 
-    	f := fate.NewFate("王", c.Solar().Time(), fate.Database(eng), fate.BaGuaFilter(), fate.ZodiacFilter(), fate.SupplyFilter())
+    	f := fate.NewFate(lastName, born.Solar().Time(), fate.ConfigOption(cfg))
     
     	e := f.MakeName(context.Background())
     	if e != nil {
@@ -42,8 +38,16 @@
     	}
 ```
 
-#### 版本履历:
+## 可执行文件生成姓名 ##
+```   
+       //生成配置文件(可修改数据库，及一些基本参数)：
+       fate.exe init
+       //输出姓名：
+       fate.exe name -l 张 -b "2020/02/06 15:04"
+```
 
+## 版本履历:
+```
 第一版:
     大部分是手动工作,现已废弃
     
@@ -67,7 +71,7 @@
     
 第四版(计划):  
     通过AI,大数据匹配算法,取出更好更佳的名字.
-
+```
 
 
 

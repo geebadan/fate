@@ -1,7 +1,6 @@
 package fate
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -23,6 +22,7 @@ const (
 	SexBoy  Sex = false
 	SexGirl Sex = true
 )
+const HelpContent = "正在使用Fate生成姓名列表，如遇到问题请访问项目地址：https://github.com/godcong/fate获取帮助!"
 
 type Fate interface {
 	MakeName(ctx context.Context) (e error)
@@ -130,7 +130,7 @@ func (f *fateImpl) getLastCharacter() error {
 }
 
 func (f *fateImpl) MakeName(ctx context.Context) (e error) {
-	log.Info("正在使用Fate生成姓名列表，如遇到问题请访问项目地址：https://github.com/godcong/fate获取帮助：")
+	log.Info(HelpContent)
 	e = f.out.Head(f.config.FileOutput.Heads...)
 	if e != nil {
 		return Wrap(e, "write head failed")
@@ -158,15 +158,12 @@ func (f *fateImpl) MakeName(ctx context.Context) (e error) {
 
 	var tmpChar []*Character
 	//supplyFilter := false
-	var w *bufio.Writer
-
 	for n := range name {
 		select {
 		case <-ctx.Done():
 			log.Info("end")
 			return
 		default:
-
 		}
 
 		tmpChar = n.FirstName
@@ -195,14 +192,11 @@ func (f *fateImpl) MakeName(ctx context.Context) (e error) {
 			log.Infow("bian", "ming", bian.GuaMing, "chu", bian.ChuYaoJiXiong, "er", bian.ErYaoJiXiong, "san", bian.SanYaoJiXiong, "si", bian.SiYaoJiXiong, "wu", bian.WuYaoJiXiong, "liu", bian.ShangYaoJiXiong)
 		}
 
-		if w != nil {
-			_, e := w.WriteString(strings.Join([]string{n.String(), ben.GuaMing, bian.GuaMing, n.PinYin(), strings.Join(f.born.Lunar().EightCharacter(), ""), f.XiYong().Shen()}, ",") + "\n")
-			if e != nil {
-				log.Error("output error", "error", e)
-			}
-		} else {
-			f.out.Write(*n)
-			log.Infow("Information-->", "名字", n.String(), "笔画", n.Strokes(), "拼音", n.PinYin(), "八字", f.born.Lunar().EightCharacter(), "喜用神", f.XiYong().Shen(), "本卦", ben.GuaMing, "变卦", bian.GuaMing)
+		if err := f.out.Write(*n); err != nil {
+			return err
+		}
+		if f.debug {
+			log.Infow(n.String(), "笔画", n.Strokes(), "拼音", n.PinYin(), "八字", f.born.Lunar().EightCharacter(), "喜用神", f.XiYong().Shen(), "本卦", ben.GuaMing, "变卦", bian.GuaMing)
 		}
 	}
 	return nil
@@ -251,6 +245,11 @@ func (f *fateImpl) getWugeName(name chan<- *Name) (e error) {
 		if f.config.FilterMode == config.FilterModeCustom {
 			//TODO
 		}
+
+		if bool(f.sex) && filterSex(l) {
+			continue
+		}
+
 		if f.config.HardFilter && hardFilter(l) {
 			sc := NewSanCai(l.TianGe, l.RenGe, l.DiGe)
 			if !Check(f.db.Database().(*xorm.Engine), sc, 5) {
@@ -265,12 +264,22 @@ func (f *fateImpl) getWugeName(name chan<- *Name) (e error) {
 		if f.debug {
 			log.Infow("lucky", "l1", l.LastStroke1, "l2", l.LastStroke2, "f1", l.FirstStroke1, "f2", l.FirstStroke2)
 		}
+		if f.config.Regular {
+			f1s, e = f.db.GetCharacters(Stoker(l.FirstStroke1, Regular()))
+		} else {
+			f1s, e = f.db.GetCharacters(Stoker(l.FirstStroke1))
+		}
 
-		f1s, e = f.db.GetCharacters(Stoker(l.FirstStroke1))
 		if e != nil {
 			return Wrap(e, "first stroke1 error")
 		}
-		f2s, e = f.db.GetCharacters(Stoker(l.FirstStroke2))
+
+		if f.config.Regular {
+			f2s, e = f.db.GetCharacters(Stoker(l.FirstStroke2, Regular()))
+		} else {
+			f2s, e = f.db.GetCharacters(Stoker(l.FirstStroke2))
+		}
+
 		if e != nil {
 			return Wrap(e, "first stoke2 error")
 		}
@@ -290,6 +299,10 @@ func (f *fateImpl) getWugeName(name chan<- *Name) (e error) {
 		}
 	}
 	return nil
+}
+
+func filterSex(lucky *WuGeLucky) bool {
+	return lucky.ZongSex == true
 }
 
 func isLucky(s string) bool {
